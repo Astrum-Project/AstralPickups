@@ -15,22 +15,31 @@ namespace Astrum
     {
         public override void OnApplicationStart()
         {
-            HarmonyMethod nop = new HarmonyMethod(typeof(AstralPickups).GetMethod(nameof(AstralPickups.HookNoOp), BindingFlags.NonPublic | BindingFlags.Static));
+            var nop = new HarmonyMethod(typeof(AstralPickups).GetMethod(nameof(HookNoOp), BindingFlags.NonPublic | BindingFlags.Static));
 
             HarmonyInstance.Patch(
                 typeof(VRC_Pickup).GetMethod(nameof(VRC_Pickup.Awake)),
                 null,
-                new HarmonyMethod(typeof(AstralPickups).GetMethod(nameof(AstralPickups.HookAwake), BindingFlags.NonPublic | BindingFlags.Static))
+                new HarmonyMethod(typeof(AstralPickups).GetMethod(nameof(HookAwake), BindingFlags.NonPublic | BindingFlags.Static))
             );
 
             HarmonyInstance.Patch(typeof(ExternVRCSDK3ComponentsVRCPickup).GetMethod(nameof(ExternVRCSDK3ComponentsVRCPickup.__set_DisallowTheft__SystemBoolean)), nop);
             HarmonyInstance.Patch(typeof(ExternVRCSDK3ComponentsVRCPickup).GetMethod(nameof(ExternVRCSDK3ComponentsVRCPickup.__set_pickupable__SystemBoolean)), nop);
+            HarmonyInstance.Patch(typeof(VRCPlayerApi).GetMethod(nameof(VRCPlayerApi.EnablePickups)), postfix: typeof(AstralPickups).GetMethod(nameof(EnablePickupsPatch), BindingFlags.NonPublic | BindingFlags.Static)
+                ?.ToNewHarmonyMethod());
+        }
+
+        private static void EnablePickupsPatch(ref bool enable)
+        {
+            enable = true;
         }
 
         private static void HookAwake(ref VRC_Pickup __instance)
         {
             __instance.DisallowTheft = false;
             __instance.pickupable = true;
+            __instance.allowManipulationWhenEquipped = true;
+            __instance.proximity = float.MaxValue;
         }
 
         private static bool HookNoOp() => false;
