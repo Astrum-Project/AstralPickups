@@ -29,6 +29,7 @@ namespace Astrum
                 ?.ToNewHarmonyMethod());
         }
 
+        //https://docs.vrchat.com/docs/players#enablepickups
         private static void EnablePickupsPatch(ref bool enable)
         {
             enable = true;
