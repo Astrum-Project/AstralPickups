@@ -1,5 +1,5 @@
 # AstralPickups
-Ignore `VRC_Pickup::DisallowTheft`, `VRC_Pickup::pickupable` via hooking
+Various VRC_Pickup Utilities
 
 # Features:
 - Allows pickup theft from other players
