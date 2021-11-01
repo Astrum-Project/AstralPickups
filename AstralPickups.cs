@@ -5,7 +5,7 @@ using System.Reflection;
 using VRC.SDKBase;
 using VRC.Udon.Wrapper.Modules;
 
-[assembly: MelonInfo(typeof(Astrum.AstralPickups), "AstralPickups", "0.1.0", downloadLink: "github.com/Astrum-Project/AstralPickups")]
+[assembly: MelonInfo(typeof(Astrum.AstralPickups), "AstralPickups", "0.2.0", downloadLink: "github.com/Astrum-Project/AstralPickups")]
 [assembly: MelonGame("VRChat", "VRChat")]
 [assembly: MelonColor(ConsoleColor.DarkMagenta)]
 
@@ -13,36 +13,26 @@ namespace Astrum
 {
     public class AstralPickups : MelonMod
     {
+        const BindingFlags PrivateStatic = BindingFlags.NonPublic | BindingFlags.Static;
+
+        public static HarmonyMethod hkNoOp = new HarmonyMethod(typeof(AstralPickups).GetMethod(nameof(HookNoOp), BindingFlags.NonPublic | BindingFlags.Static));//
+        public static HarmonyMethod hkAwake = typeof(AstralPickups).GetMethod(nameof(HookAwake), PrivateStatic)?.ToNewHarmonyMethod();
+
         public override void OnApplicationStart()
         {
-            var nop = new HarmonyMethod(typeof(AstralPickups).GetMethod(nameof(HookNoOp), BindingFlags.NonPublic | BindingFlags.Static));
-
-            HarmonyInstance.Patch(
-                typeof(VRC_Pickup).GetMethod(nameof(VRC_Pickup.Awake)),
-                null,
-                new HarmonyMethod(typeof(AstralPickups).GetMethod(nameof(HookAwake), BindingFlags.NonPublic | BindingFlags.Static))
-            );
-
-            HarmonyInstance.Patch(typeof(ExternVRCSDK3ComponentsVRCPickup).GetMethod(nameof(ExternVRCSDK3ComponentsVRCPickup.__set_DisallowTheft__SystemBoolean)), nop);
-            HarmonyInstance.Patch(typeof(ExternVRCSDK3ComponentsVRCPickup).GetMethod(nameof(ExternVRCSDK3ComponentsVRCPickup.__set_pickupable__SystemBoolean)), nop);
-            HarmonyInstance.Patch(typeof(VRCPlayerApi).GetMethod(nameof(VRCPlayerApi.EnablePickups)), postfix: typeof(AstralPickups).GetMethod(nameof(EnablePickupsPatch), BindingFlags.NonPublic | BindingFlags.Static)
-                ?.ToNewHarmonyMethod());
+            HarmonyInstance.Patch(typeof(VRC_Pickup).GetMethod(nameof(VRC_Pickup.Awake)), null, hkAwake); // https://docs.unity3d.com/ScriptReference/MonoBehaviour.Awake.html
+            HarmonyInstance.Patch(typeof(VRCPlayerApi).GetMethod(nameof(VRCPlayerApi.EnablePickups)), null, hkNoOp); // https://docs.vrchat.com/docs/players#enablepickups
+            HarmonyInstance.Patch(typeof(ExternVRCSDK3ComponentsVRCPickup).GetMethod(nameof(ExternVRCSDK3ComponentsVRCPickup.__set_DisallowTheft__SystemBoolean)), hkNoOp);
+            HarmonyInstance.Patch(typeof(ExternVRCSDK3ComponentsVRCPickup).GetMethod(nameof(ExternVRCSDK3ComponentsVRCPickup.__set_pickupable__SystemBoolean)), hkNoOp);
         }
 
-        //https://docs.vrchat.com/docs/players#enablepickups
-        private static void EnablePickupsPatch(ref bool enable)
-        {
-            enable = true;
-        }
-
+        private static bool HookNoOp() => false;
         private static void HookAwake(ref VRC_Pickup __instance)
         {
             __instance.DisallowTheft = false;
             __instance.pickupable = true;
-            __instance.allowManipulationWhenEquipped = true;
-            __instance.proximity = float.MaxValue;
+            __instance.allowManipulationWhenEquipped = true; // TODO: write a hook to prevent this from being set
+            __instance.proximity = float.MaxValue; // TODO: write a hook to prevent this from being set
         }
-
-        private static bool HookNoOp() => false;
     }
 }
