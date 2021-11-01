@@ -5,7 +5,7 @@ using System.Reflection;
 using VRC.SDKBase;
 using VRC.Udon.Wrapper.Modules;
 
-[assembly: MelonInfo(typeof(Astrum.AstralPickups), "AstralPickups", "0.2.0", downloadLink: "github.com/Astrum-Project/AstralPickups")]
+[assembly: MelonInfo(typeof(Astrum.AstralPickups), "AstralPickups", "0.2.1", downloadLink: "github.com/Astrum-Project/AstralPickups")]
 [assembly: MelonGame("VRChat", "VRChat")]
 [assembly: MelonColor(ConsoleColor.DarkMagenta)]
 
@@ -24,6 +24,8 @@ namespace Astrum
             HarmonyInstance.Patch(typeof(VRCPlayerApi).GetMethod(nameof(VRCPlayerApi.EnablePickups)), hkNoOp); // https://docs.vrchat.com/docs/players#enablepickups
             HarmonyInstance.Patch(typeof(ExternVRCSDK3ComponentsVRCPickup).GetMethod(nameof(ExternVRCSDK3ComponentsVRCPickup.__set_DisallowTheft__SystemBoolean)), hkNoOp);
             HarmonyInstance.Patch(typeof(ExternVRCSDK3ComponentsVRCPickup).GetMethod(nameof(ExternVRCSDK3ComponentsVRCPickup.__set_pickupable__SystemBoolean)), hkNoOp);
+            HarmonyInstance.Patch(typeof(ExternVRCSDK3ComponentsVRCPickup).GetMethod(nameof(ExternVRCSDK3ComponentsVRCPickup.__set_allowManipulationWhenEquipped__SystemBoolean)), hkNoOp);
+            HarmonyInstance.Patch(typeof(ExternVRCSDK3ComponentsVRCPickup).GetMethod(nameof(ExternVRCSDK3ComponentsVRCPickup.__set_proximity__SystemSingle)), hkNoOp);
         }
 
         private static bool HookNoOp() => false;
@@ -31,8 +33,8 @@ namespace Astrum
         {
             __instance.DisallowTheft = false;
             __instance.pickupable = true;
-            __instance.allowManipulationWhenEquipped = true; // TODO: write a hook to prevent this from being set
-            __instance.proximity = float.MaxValue; // TODO: write a hook to prevent this from being set
+            __instance.allowManipulationWhenEquipped = true;
+            __instance.proximity = float.MaxValue;
         }
     }
 }
