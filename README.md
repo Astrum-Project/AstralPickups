@@ -17,3 +17,5 @@ Ignore `VRC_Pickup::DisallowTheft`, `VRC_Pickup::pickupable` via hooking
 - [ ] MelonPreferences
 - [ ] Wall Reach
 - [ ] Infinite Reach
+- [ ] Hook AllowManipulationWhenEquipped
+- [ ] Hook Proximity
