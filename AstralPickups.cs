@@ -7,7 +7,7 @@ using System.Reflection;
 using VRC.SDKBase;
 using VRC.Udon.Wrapper.Modules;
 
-[assembly: MelonInfo(typeof(Astrum.AstralPickups), "AstralPickups", "0.3.1", downloadLink: "github.com/Astrum-Project/AstralPickups")]
+[assembly: MelonInfo(typeof(Astrum.AstralPickups), "AstralPickups", "0.4.0", downloadLink: "github.com/Astrum-Project/AstralPickups")]
 [assembly: MelonGame("VRChat", "VRChat")]
 [assembly: MelonColor(ConsoleColor.DarkMagenta)]
 [assembly: MelonOptionalDependencies("AstralCore")]
@@ -31,7 +31,7 @@ namespace Astrum
             HarmonyInstance.Patch(typeof(ExternVRCSDK3ComponentsVRCPickup).GetMethod(nameof(ExternVRCSDK3ComponentsVRCPickup.__set_proximity__SystemSingle)), hkNoOp);
 
             if (AppDomain.CurrentDomain.GetAssemblies().Any(f => f.GetName().Name == "AstralCore"))
-                External.SetupCommands();
+                Extern.SetupCommands();
             else MelonLogger.Warning("AstralCore is missing, running at reduced functionality");
         }
 
@@ -44,24 +44,56 @@ namespace Astrum
             __instance.proximity = float.MaxValue;
         }
 
-        private static class External
+        public static string Drop()
+        {
+            int count = 0;
+            foreach (VRC_Pickup pickup in UnityEngine.Object.FindObjectsOfType<VRC_Pickup>())
+            {
+                if (!pickup.IsHeld) continue;
+                if (Networking.GetOwner(pickup.gameObject) != Networking.LocalPlayer)
+                    Networking.SetOwner(Networking.LocalPlayer, pickup.gameObject);
+                pickup.Drop(); // may be unneeded
+                count++;
+                // owner can possibly be restored
+            }
+            return count.ToString();
+        }
+
+        private static bool frozen = false;
+        private static VRC_Pickup[] pickups = new VRC_Pickup[0];
+        private static void FreezePickups()
+        {
+            if (Networking.LocalPlayer is null)
+            {
+                Extern.Freeze(false);
+                return;
+            }
+
+            foreach (VRC_Pickup pickup in pickups)
+                if (pickup != null && Networking.GetOwner(pickup.gameObject) != Networking.LocalPlayer)
+                    Networking.SetOwner(Networking.LocalPlayer, pickup.gameObject);
+        }
+
+        private static class Extern
         {
             public static void SetupCommands()
             {
                 ModuleManager.Module module = new ModuleManager.Module("Pickups");
-                module.Register(new CommandManager.Command() { onExecute = new Func<string[], string>(_ =>
-                {
-                    foreach (VRC_Pickup pickup in UnityEngine.Object.FindObjectsOfType<VRC_Pickup>())
-                    {
-                        if (!pickup.IsHeld) continue;
-                        if (Networking.GetOwner(pickup.gameObject) != Networking.LocalPlayer)
-                            Networking.SetOwner(Networking.LocalPlayer, pickup.gameObject);
-                        pickup.Drop(); // may be unneeded
-                        // owner can possibly be restored
-                    }
+                module.Register(new CommandManager.Command(new Func<string[], string>(_ => Drop())), "Drop");
+                module.Register(new CommandManager.ConVar<bool>(new Action<bool>(state => Freeze(state))), "Freeze");
+            }
 
-                    return "";
-                }) }, "Drop");
+            public static void Freeze(bool state)
+            {
+                if (frozen == state) return;
+                frozen = state;
+
+                if (state)
+                {
+                    pickups = UnityEngine.Object.FindObjectsOfType<VRC_Pickup>();
+                    AstralCore.Events.OnUpdate += FreezePickups;
+                }
+                else AstralCore.Events.OnUpdate -= FreezePickups;
             }
         }
     }
