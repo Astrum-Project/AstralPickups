@@ -4,6 +4,9 @@ Various VRC_Pickup Utilities
 # Features:
 - Allows pickup theft from other players
 - Makes pickups unconditionally enabled
+### With Core:
+- Drop all pickups
+- Freeze all pickup
 
 # Advantages:
 - Doesn't run OnUpdate
