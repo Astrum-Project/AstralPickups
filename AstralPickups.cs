@@ -7,19 +7,23 @@ using System.Reflection;
 using VRC.SDKBase;
 using VRC.Udon.Wrapper.Modules;
 
-[assembly: MelonInfo(typeof(Astrum.AstralPickups), "AstralPickups", "0.4.0", downloadLink: "github.com/Astrum-Project/AstralPickups")]
+[assembly: MelonInfo(typeof(Astrum.AstralPickups), "AstralPickups", "0.5.0", downloadLink: "github.com/Astrum-Project/AstralPickups")]
 [assembly: MelonGame("VRChat", "VRChat")]
 [assembly: MelonColor(ConsoleColor.DarkMagenta)]
 [assembly: MelonOptionalDependencies("AstralCore")]
 
 namespace Astrum
 {
-    public class AstralPickups : MelonMod
+    public partial class AstralPickups : MelonMod
     {
         const BindingFlags PrivateStatic = BindingFlags.NonPublic | BindingFlags.Static;
 
-        public static HarmonyMethod hkNoOp = new HarmonyMethod(typeof(AstralPickups).GetMethod(nameof(HookNoOp), BindingFlags.NonPublic | BindingFlags.Static));//
+        public static HarmonyMethod hkNoOp = new HarmonyMethod(typeof(AstralPickups).GetMethod(nameof(HookNoOp), BindingFlags.NonPublic | BindingFlags.Static));
         public static HarmonyMethod hkAwake = typeof(AstralPickups).GetMethod(nameof(HookAwake), PrivateStatic)?.ToNewHarmonyMethod();
+
+        public static bool hasCore = false;
+
+        private static VRC_Pickup[] pickups;
 
         public override void OnApplicationStart()
         {
@@ -30,7 +34,7 @@ namespace Astrum
             HarmonyInstance.Patch(typeof(ExternVRCSDK3ComponentsVRCPickup).GetMethod(nameof(ExternVRCSDK3ComponentsVRCPickup.__set_allowManipulationWhenEquipped__SystemBoolean)), hkNoOp);
             HarmonyInstance.Patch(typeof(ExternVRCSDK3ComponentsVRCPickup).GetMethod(nameof(ExternVRCSDK3ComponentsVRCPickup.__set_proximity__SystemSingle)), hkNoOp);
 
-            if (AppDomain.CurrentDomain.GetAssemblies().Any(f => f.GetName().Name == "AstralCore"))
+            if (hasCore = AppDomain.CurrentDomain.GetAssemblies().Any(f => f.GetName().Name == "AstralCore"))
                 Extern.SetupCommands();
             else MelonLogger.Warning("AstralCore is missing, running at reduced functionality");
         }
@@ -44,34 +48,36 @@ namespace Astrum
             __instance.proximity = float.MaxValue;
         }
 
-        public static string Drop()
+        public override void OnSceneWasLoaded(int index, string _)
         {
-            int count = 0;
-            foreach (VRC_Pickup pickup in UnityEngine.Object.FindObjectsOfType<VRC_Pickup>())
+            if (!hasCore || index != -1) return;
+
+            Fetch();
+        }
+
+        public static void Fetch() => pickups = UnityEngine.Object.FindObjectsOfType<VRC_Pickup>();
+
+        public static void Drop()
+        {
+            Fetch();
+
+            foreach (VRC_Pickup pickup in pickups)
             {
                 if (!pickup.IsHeld) continue;
                 if (Networking.GetOwner(pickup.gameObject) != Networking.LocalPlayer)
                     Networking.SetOwner(Networking.LocalPlayer, pickup.gameObject);
                 pickup.Drop(); // may be unneeded
-                count++;
                 // owner can possibly be restored
             }
-            return count.ToString();
         }
 
-        private static bool frozen = false;
-        private static VRC_Pickup[] pickups = new VRC_Pickup[0];
-        private static void FreezePickups()
+        public static void Scatter()
         {
-            if (Networking.LocalPlayer is null)
-            {
-                Extern.Freeze(false);
-                return;
-            }
+            Fetch();
 
-            foreach (VRC_Pickup pickup in pickups)
-                if (pickup != null && Networking.GetOwner(pickup.gameObject) != Networking.LocalPlayer)
-                    Networking.SetOwner(Networking.LocalPlayer, pickup.gameObject);
+            int max = VRCPlayerApi.AllPlayers.Count - 1;
+            for (int i = 0; i < pickups.Length; i++)
+                Networking.SetOwner(VRCPlayerApi.AllPlayers[UnityEngine.Random.Range(0, max)], pickups[i].gameObject);
         }
 
         private static class Extern
@@ -79,21 +85,15 @@ namespace Astrum
             public static void SetupCommands()
             {
                 ModuleManager.Module module = new ModuleManager.Module("Pickups");
-                module.Register(new CommandManager.Command(new Func<string[], string>(_ => Drop())), "Drop");
-                module.Register(new CommandManager.ConVar<bool>(new Action<bool>(state => Freeze(state))), "Freeze");
-            }
+                module.Register(new CommandManager.Button(new Action(() => Fetch())), nameof(Fetch));
+                module.Register(new CommandManager.Button(new Action(() => Drop())), nameof(Drop));
+                module.Register(new CommandManager.Button(new Action(() => Scatter())), nameof(Scatter));
 
-            public static void Freeze(bool state)
-            {
-                if (frozen == state) return;
-                frozen = state;
+                module.Register(Feeeze.cState, "Freeze");
 
-                if (state)
-                {
-                    pickups = UnityEngine.Object.FindObjectsOfType<VRC_Pickup>();
-                    AstralCore.Events.OnUpdate += FreezePickups;
-                }
-                else AstralCore.Events.OnUpdate -= FreezePickups;
+                module.Register(Orbit.cState, "Orbit");
+                module.Register(Orbit.cSpeed, "Orbit.Speed");
+                module.Register(Orbit.cDistance, "Orbit.Distance");
             }
         }
     }
