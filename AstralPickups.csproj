@@ -10,6 +10,7 @@
     <RootNamespace>Astrum</RootNamespace>
     <AssemblyName>AstralPickups</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <LangVersion>preview</LangVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
@@ -36,6 +37,9 @@
   <ItemGroup>
     <Reference Include="AstralCore">
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\VRChat\Mods\AstralCore.dll</HintPath>
+    </Reference>
+    <Reference Include="AstralCore.UI">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\VRChat\Mods\AstralCore.UI.dll</HintPath>
     </Reference>
     <Reference Include="Il2Cppmscorlib, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>D:\SteamLibary\steamapps\common\VRChat\MelonLoader\Managed\Il2Cppmscorlib.dll</HintPath>

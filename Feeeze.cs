@@ -1,5 +1,5 @@
-﻿using VRC.SDKBase;
-using static Astrum.AstralCore.Managers.CommandManager;
+﻿using Astrum.AstralCore.UI.Attributes;
+using VRC.SDKBase;
 
 namespace Astrum
 {
@@ -8,8 +8,8 @@ namespace Astrum
         // lkicMsn-s_8
         public static class Feeeze
         {
-            public static ConVar<bool> cState = new ConVar<bool>(val => State = val, state);
             private static bool state = false;
+            [UIProperty<bool>("Pickups", "Freeze")]
             public static bool State
             {
                 get => state;
@@ -17,7 +17,6 @@ namespace Astrum
                 {
                     if (state == value) return;
                     state = value;
-                    cState.Value = value;
 
                     if (value)
                         AstralCore.Events.OnUpdate += Update;

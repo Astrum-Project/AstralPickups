@@ -1,6 +1,6 @@
-﻿using UnityEngine;
+﻿using Astrum.AstralCore.UI.Attributes;
+using UnityEngine;
 using VRC.SDKBase;
-using static Astrum.AstralCore.Managers.CommandManager;
 
 namespace Astrum
 {
@@ -8,8 +8,8 @@ namespace Astrum
     {
         public static class Orbit
         {
-            public static ConVar<bool> cState = new ConVar<bool>(val => State = val, state);
             private static bool state = false;
+            [UIProperty<bool>("Pickups", "Orbit")]
             public static bool State
             {
                 get => state;
@@ -25,7 +25,6 @@ namespace Astrum
 
                     if (state == value) return;
                     state = value;
-                    cState.Value = value;
 
                     if (value)
                         AstralCore.Events.OnUpdate += Update;
@@ -33,10 +32,10 @@ namespace Astrum
                 }
             }
 
-            public static ConVar<float> cSpeed = new ConVar<float>(val => speed = val, speed);
+            [UIField<float>("Pickups", "Orbit.Speed")]
             public static float speed = 1f;
 
-            public static ConVar<float> cDistance = new ConVar<float>(val => distance = val, distance);
+            [UIField<float>("Pickups", "Orbit.Distance")]
             public static float distance = 1f;
             
             private static VRCPlayerApi player;
