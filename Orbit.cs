@@ -15,6 +15,9 @@ namespace Astrum
                 get => state;
                 set
                 {
+                    if (state == value) return;
+                    state = value;
+
                     if (AstralCore.Managers.SelectionManager.SelectedPlayer is null)
                         player = Networking.LocalPlayer;
                     else player = VRCPlayerApi.AllPlayers.Find(
@@ -22,9 +25,6 @@ namespace Astrum
                             new System.Predicate<VRCPlayerApi>(x => x.displayName == AstralCore.Managers.SelectionManager.SelectedPlayer.displayName)
                         )
                     );
-
-                    if (state == value) return;
-                    state = value;
 
                     if (value)
                         AstralCore.Events.OnUpdate += Update;
