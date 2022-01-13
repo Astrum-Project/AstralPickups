@@ -37,7 +37,10 @@ namespace Astrum
 
             [UIField<float>("Pickups", "Orbit.Distance")]
             public static float distance = 1f;
-            
+
+            [UIField<float>("Pickups", "Orbit.Height")]
+            public static float height = 1f;
+
             private static VRCPlayerApi player;
 
             private static void Update()
@@ -67,7 +70,7 @@ namespace Astrum
                     // nobody had the intelligence to do this originally, and opted instead to steal my code that used a puppet object
                     // it shows how not a single client developer has graduated from high school level geometry
                     // that or they are too money hungry to want to take the time to write good, efficient code.
-                    pickup.transform.position = player.gameObject.transform.position + new Vector3(Mathf.Sin(Time.time * speed + degrees * i) * distance, 0, Mathf.Cos(Time.time * speed + degrees * i) * distance);
+                    pickup.transform.position = player.gameObject.transform.position + new Vector3(Mathf.Sin(Time.time * speed + degrees * i) * distance, height, Mathf.Cos(Time.time * speed + degrees * i) * distance);
                     //⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⣀⣀
                     //⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣶⠟⠛⠛⠛⠛⠛⣛⣻⣿⣿⣿⣿⣿⣟⣛⣛⣛⠛⠒⠲⠶⠦⣤⣤⣤⣀⡀
                     //⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣼⠏⠁⠀⠀⢀⣤⠶⣛⣩⣥⠤⠤⠤⠤⢤⣤⣤⣭⣭⣉⣉⣛⣛⣻⣭⣥⠬⡍⠛⢶⣄⡀

@@ -6,7 +6,7 @@ using System.Reflection;
 using VRC.SDKBase;
 using VRC.Udon.Wrapper.Modules;
 
-[assembly: MelonInfo(typeof(Astrum.AstralPickups), "AstralPickups", "0.6.1", downloadLink: "github.com/Astrum-Project/AstralPickups")]
+[assembly: MelonInfo(typeof(Astrum.AstralPickups), "AstralPickups", "0.6.2", downloadLink: "github.com/Astrum-Project/AstralPickups")]
 [assembly: MelonGame("VRChat", "VRChat")]
 [assembly: MelonColor(ConsoleColor.DarkMagenta)]
 [assembly: MelonOptionalDependencies("AstralCore")]
